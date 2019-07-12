@@ -54,5 +54,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->belongsToMany(Job::class,'favourites','user_id','job_id')->withTimeStamps();//favourites tableにも言及する必要がある
     }
 
-
+    public function roles() {
+        return $this->belongsToMany(Role::class);
+    }
 }

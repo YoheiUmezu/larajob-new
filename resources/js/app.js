@@ -29,6 +29,7 @@ Vue.component('apply-component', require('./components/ApplyComponent.vue').defa
 Vue.component('favourite-component', require('./components/FavouriteComponent.vue').default);
 Vue.component('search-component', require('./components/SearchComponent.vue').default);
 
+
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

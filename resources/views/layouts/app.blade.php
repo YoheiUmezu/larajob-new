@@ -63,22 +63,25 @@
                                 </li>
                             @endif
                         @else
+                        @if(Auth::user()->user_type == 'employer')
                         <li>
                             <a href="{{route('job.create')}}"><button class="btn btn-secondary">Post a job</button></a>
                         </li>
+                        @endif
 
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     @if(Auth::user()->user_type=='employer')
                                     {{Auth::user()->company->cname}}
 
-                                    @endif
+                                    
 
-                                    @if(Auth::user()->user_type == 'company')
-                                    {{Auth::user()->company->cname ?? ''}}
+                                    @elseif(Auth::user()->user_type == 'seeker')
+                                    {{Auth::user()->name}}
                                     @else
                                     {{Auth::user()->name}}
                                     @endif
+                                    
                                     <span class="caret"></span>
                                 </a>
 
@@ -94,19 +97,23 @@
                                         Applicants
                                     </a>
                                     <a href="{{route('my.job')}}" class="dropdown-item">My Jobs</a>
-                                    @else
+
+                                    @elseif(Auth::user()->user_type=='seeker')
                                     <a class="dropdown-item" href={{route('profile.view') }}>
                                         {{ __('Profile') }}
                                     </a>
+                                    <a class="dropdown-item" href={{route('home') }}>
+                                        {{ __('Saved jobs') }}
+                                    </a>
+                                    @else
+
                                     @endif
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
                                         {{ __('Logout') }}
                                     </a>
-                                    <a class="dropdown-item" href={{route('home') }}>
-                                        {{ __('Saved jobs') }}
-                                    </a>
+                                    
 
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                         @csrf
@@ -120,7 +127,7 @@
         </nav>
 
         <main class="py-4">
-            @yield('content')
+            @yield('content')<!---home.blade.phpのcontentをさしてる----->
         </main>
     </div>
 </body>

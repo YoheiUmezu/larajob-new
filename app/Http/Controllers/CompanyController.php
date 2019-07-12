@@ -12,11 +12,17 @@ class CompanyController extends Controller
     //     return view('company.index',compact('name'));//compactは全部持ってくる
     // }
     public function __construct(){
-        $this->middleware(['employer','verified'],['except'=>array('index')]);//indexだけは見ることができる
+        $this->middleware(['employer','verified'],['except'=>array('index', 'company')]);//indexだけは見ることができる
     }
 
     public function index($id, Company $company){
+        $jobs = Job::where('user_id', $id)->get();
         return view('company.index',compact('company'));//companyの情報全部持ってくる
+    }
+
+    public function company() {
+        $companies = Company::paginate(8);
+        return view('company.company', compact('companies'));
     }
 
     public function create(){

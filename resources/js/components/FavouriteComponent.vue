@@ -1,7 +1,7 @@
 <template>
     <div>
             <button v-if="show" @click.prevent="unsave()" class="btn btn-dark" style="width:100%;">Un Save</button>
-            <button v-else @click.prevent="save()" class="btn btn-primary" style="width:100%;">Save</button>
+            <button v-else @click.prevent="save()" class="btn btn-danger" style="width:100%;">Save</button>
 
 
 

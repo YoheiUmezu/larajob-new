@@ -48386,7 +48386,7 @@ var render = function() {
       : _c(
           "button",
           {
-            staticClass: "btn btn-primary",
+            staticClass: "btn btn-danger",
             staticStyle: { width: "100%" },
             on: {
               click: function($event) {
@@ -60712,6 +60712,12 @@ if (token) {
 } else {
   console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
+
+$.ajaxSetup({
+  headers: {
+    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+  }
+});
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

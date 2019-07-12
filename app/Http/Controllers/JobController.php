@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Job;
+use App\Category;
 use App\Company;
 use App\Http\Requests\JobPostRequest;
+use App\Post;
 use Auth;
 
 class JobController extends Controller
@@ -17,15 +19,68 @@ class JobController extends Controller
     public function index(){
         //$jobs = Job::all()->take(10);//10件だけデータを取ってくる
         $jobs = Job::latest()->limit(10)->where('status',1)->get();//statusが1の中から新しい順に10個のリストを取ってくる
+        //
+        $categories = Category::with('jobs')->get();//jobsとone to manyの関係
+        //return $categories;//テーブルの内容を表示する
+        // foreach($categories as $category) {
+        //     echo $category->name;
+        //     echo $category->jobs->count();
+        // }
         //$companies = Company::latest()->limit(12)->get();//最新から12個
+        $posts = Post::where('status', 1)->get();
         $companies = Company::get()->random(12);//ランダムに12個表示する
-        return view('welcome',compact('jobs', 'companies'));//welcome.blade.phpの内容を持ってきて表示する
+        return view('welcome',compact('jobs', 'companies', 'categories','posts'));//welcome.blade.phpの内容を持ってきて表示する
     }
 
     public function show($id,Job $job){//web.phpで宣言したやつ(Job)はモデル　use App\Job
         //$job=Job::find($id);
         //dd($job->id);//jobの情報を持ってくる上のコードでもok idの値を返す　jobモデルから情報を持ってくる
-        return view('jobs.show',compact('job'));//sho.blade.phpの内容を表示する
+        
+        $jobRecommendations = $this->jobRecommendations($job);
+        return view('jobs.show',compact('job', 'jobRecommendations'));//sho.blade.phpの内容を表示する
+    }
+
+    public function jobRecommendations($job) {
+        //recommendation機能
+        $data = [];//dataのダブりを防ぐ
+
+        $jobBasedOnCategories = Job::latest()->
+                                where('category_id', $job->category_id)->//category別に仕事をrecommendする。今参照している$jobのカテゴリーを指定する。
+                                whereDate('last_date', '>', date('Y-m-d'))->//期限切れの求人情報を削除する
+                                where('id', '!=', $job->id)->//今選択している仕事以外のものを指定
+                                where('status', 1)->//現在有効になっている仕事のみ
+                                limit(2)->//２個だけ表示する
+                                get();
+            
+        array_push($data,$jobBasedOnCategories);//dataのダブりを防ぐ
+                                
+        $jobBasedOnCompany = Job::latest()->
+                            where('company_id', $job->company_id)->//company別に仕事をrecommendする。今参照している$jobのカテゴリーを指定する。
+                            whereDate('last_date', '>', date('Y-m-d'))->//期限切れの求人情報を削除する
+                            where('id', '!=', $job->id)->//今選択している仕事以外のものを指定
+                            where('status', 1)->//現在有効になっている仕事のみ
+                            limit(2)->//２個だけ表示する
+                            get();
+
+        array_push($data,$jobBasedOnCompany);
+        
+        $jobBasedOnPosition = Job::latest()->
+                            where('position', 'LIKE', '%'.$job->position.'%')->
+                            whereDate('last_date', '>', date('Y-m-d'))->//期限切れの求人情報を削除する
+                            where('id', '!=', $job->id)->//今選択している仕事以外のものを指定
+                            where('status', 1)->//現在有効になっている仕事のみ
+                            limit(2)->//２個だけ表示する
+                            get();
+
+        array_push($data,$jobBasedOnPosition);
+        
+        $collection = collect($data);//dataのダブりを防ぐ
+        $unique = $collection->unique("id");
+        $jobRecommendations =  $unique->values()->first();
+
+        return $jobRecommendations;
+
+
     }
 
     public function company(){
@@ -64,6 +119,10 @@ class JobController extends Controller
             'type'=>request('type'),
             'status'=>request('status'),
             'last_date'=>request('last_date'),
+            'number_of_vacancy'=>request('number_of_vacancy'),
+            'gender'=>request('gender'),
+            'experience'=>request('experience'),
+            'salary'=>request('salary')
         ]);
         return redirect()->back()->with('message', 'Job posted successfully!');
     }
@@ -85,21 +144,49 @@ class JobController extends Controller
     }
 
     public function allJobs(Request $request){
-        $keyword = $request->get('title');
-        $type = $request->get('type');
-        $category = $request->get('category_id');
+        //front search
+        $search = $request->get('search');
         $address = $request->get('address');
-        if($keyword||$type||$category||$address){
-            $jobs = Job::where('title','LIKE','%'.$keyword.'%')//部分一致
-                ->orWhere('type',$type)
-                ->orWhere('category_id',$category)
-                ->orWhere('address')
-                ->paginate(10);//もしデータが帰ってこなかったら、10件ずつ表示するリザルトページを返す
+        if($search && $address) {
+            $jobs = Job::where('title','LIKE','%'.$search.'%')
+            ->orWhere('title','LIKE', '%' .$search. '%')
+            ->orWhere('type','LIKE', '%' .$search. '%')
+            ->orWhere('address','LIKE', '%' .$address. '%')
+            ->paginate(10);
+        }
+
+
+
+
+        $keyword = $request->get('title');
+
+       $type = $request->get('type');
+
+       $category = $request->get('category_id');
+
+       $address = $request->get('address');
+
+       if($keyword||$type||$category||$address){
+
+        $jobs = Job::where('title','LIKE','%'.$keyword.'%')
+
+                ->where('type',$type)// this is where now
+
+                ->orWhere('category_id',$category)// you can make this also where
+
+                ->orWhere('address',$address)// this is orWhere
+
+                ->paginate(10);
+
                 return view('jobs.alljobs',compact('jobs'));
-        }else{
-        //dd($address);
-        $jobs = Job::latest()->paginate(10);
-        return view('jobs.alljobs',compact('jobs'));
+
+       }else{
+
+
+
+            $jobs = Job::latest()->paginate(10);
+
+            return view('jobs.alljobs',compact('jobs'));
     }
 
         }

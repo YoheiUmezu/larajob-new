@@ -11,6 +11,10 @@
 |
 */
 
+Route::view('demo', 'demo');
+
+
+//jobs
 Route::get('/', 'JobController@index');//job controllerのindexページを表示する為に変更
 
 //Auth::routes();
@@ -82,6 +86,39 @@ Route::POST('/unsave/{id}', 'FavouriteController@unSaveJob');
 
 //search
 Route::get('/jobs/search','JobController@searchJobs');
+
+//category
+Route::get('/category/{id}', 'CategoryController@index')->name('category.index');
+
+//company
+Route::get('/companies', 'CompanyController@company')->name('company');
+
+//email
+Route::POST('/job/mail', 'EmailController@send')->name('mail');//'mail' form action=""に使う
+
+//admin
+Route::get('/dashboard', 'DashboardController@index')->middleware('admin');
+Route::get('/dashboard/create', 'DashboardController@create')->middleware('admin');
+Route::POST('/dashboard/create', 'DashboardController@store')->name('post.store')->middleware('admin');
+Route::POST('/dashboard/destroy', 'DashboardController@destroy')->name('post.delete')->middleware('admin');
+Route::get('/dashboard/{id}/edit', 'DashboardController@edit')->name('post.edit')->middleware('admin');
+Route::POST('/dashboard/{id}/update', 'DashboardController@update')->name('post.update')->middleware('admin');
+Route::get('/dashboard/trash', 'DashboardController@trash')->middleware('admin');
+Route::get('/dashboard/{id}/trash', 'DashboardController@trash')->name('post.restore')->middleware('admin');
+Route::get('/dashboard/{id}/toggle', 'DashboardController@toggle')->name('post.toggle')->middleware('admin');
+
+
+Route::get('/posts/{id}/{slug}', 'DashboardController@show')->name('post.show');
+
+//testimonial
+Route::get('testimonial/create', 'TestimonialController@create')->middleware('admin');
+Route::post('testimonial/create', 'TestimonialController@store')->name('tesimonial.store')->middleware('admin');
+
+//job fetch
+Route::get('/dashboard/jobs', 'DashboardController@getAllJobs')->middleware('admin');
+Route::get('/dashboard/{id}/jobs', 'DashboardController@changeJobStatus')->name('job.status')->middleware('admin');
+
+
 
 
 
